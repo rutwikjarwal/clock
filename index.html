@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alarm Clock with Countdown</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: white;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+    }
+
+    .time-display {
+      font-size: 3rem;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+    }
+
+    .alarm-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    label {
+      font-size: 1.2rem;
+    }
+
+    input[type="time"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: #2575fc;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #1b5fd9;
+    }
+
+    #alarm-status {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+
+    #countdown {
+      margin-top: 1rem;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Alarm Clock</h1>
+    <div class="time-display" id="current-time">00:00:00 AM</div>
+    <div class="alarm-form">
+      <label for="alarm-time">Set Alarm Time:</label>
+      <input type="time" id="alarm-time" required>
+      <button id="set-alarm">Set Alarm</button>
+      <button id="clear-alarm">Clear Alarm</button>
+    </div>
+    <div id="alarm-status"></div>
+    <div id="countdown"></div>
+  </div>
+
+  <script>
+    const currentTimeDisplay = document.getElementById('current-time');
+    const alarmTimeInput = document.getElementById('alarm-time');
+    const setAlarmButton = document.getElementById('set-alarm');
+    const clearAlarmButton = document.getElementById('clear-alarm');
+    const alarmStatus = document.getElementById('alarm-status');
+    const countdownDisplay = document.getElementById('countdown');
+
+    let alarmTime = null;
+    let alarmTimeout = null;
+    let countdownInterval = null;
+
+    // Function to format time with AM/PM
+    function formatTime(date) {
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12; // Convert to 12-hour format
+      return `${hours}:${minutes}:${seconds} ${ampm}`;
+    }
+
+    // Function to update current time
+    function updateTime() {
+      const now = new Date();
+      currentTimeDisplay.textContent = formatTime(now);
+
+      // Check if alarm time matches current time
+      if (alarmTime) {
+        const alarmDate = new Date();
+        alarmDate.setHours(parseInt(alarmTime.split(':')[0]));
+        alarmDate.setMinutes(parseInt(alarmTime.split(':')[1]));
+        alarmDate.setSeconds(0);
+
+        if (now >= alarmDate) {
+          alarmStatus.textContent = "Alarm ringing!";
+          clearInterval(countdownInterval);
+          countdownDisplay.textContent = "";
+          clearTimeout(alarmTimeout);
+          alarmTimeout = setTimeout(() => {
+            alarmStatus.textContent = "";
+          }, 60000); // Stop alarm after 1 minute
+        } else {
+          startCountdown(alarmDate);
+        }
+      }
+    }
+
+    // Function to start countdown
+    function startCountdown(alarmDate) {
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        const now = new Date();
+        const timeLeft = alarmDate - now;
+
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          countdownDisplay.textContent = "";
+          return;
+        }
+
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        countdownDisplay.textContent = `Time left: ${hours}h ${minutes}m ${seconds}s`;
+      }, 1000);
+    }
+
+    // Update time every second
+    setInterval(updateTime, 1000);
+
+    // Set alarm
+    setAlarmButton.addEventListener('click', () => {
+      const time = alarmTimeInput.value;
+      if (!time) {
+        alert("Please select a valid time!");
+        return;
+      }
+      alarmTime = time;
+      alarmStatus.textContent = `Alarm set for ${time}`;
+      countdownDisplay.textContent = ""; // Clear previous countdown
+    });
+
+    // Clear alarm
+    clearAlarmButton.addEventListener('click', () => {
+      alarmTime = null;
+      alarmStatus.textContent = "Alarm cleared!";
+      clearInterval(countdownInterval);
+      countdownDisplay.textContent = "";
+    });
+  </script>
+</body>
+</html>
